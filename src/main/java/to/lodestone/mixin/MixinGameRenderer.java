@@ -18,31 +18,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package grondag.darkness.mixin;
+package to.lodestone.mixin;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.client.renderer.DimensionSpecialEffects;
-import net.minecraft.world.phys.Vec3;
+import com.mojang.blaze3d.vertex.PoseStack;
 
-import grondag.darkness.Darkness;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LightTexture;
 
-@Mixin(DimensionSpecialEffects.EndEffects.class)
-public class MixinEndEffects {
-	private static double MIN = 0.029999999329447746D;
+import to.lodestone.Darkness;
+import to.lodestone.LightmapAccess;
 
-	@Inject(method = "getBrightnessDependentFogColor", at = @At(value = "RETURN"), cancellable = true)
-	private void onAdjustFogColor(CallbackInfoReturnable<Vec3> ci) {
-		final double factor = Darkness.darkEndFog();
+@Mixin(GameRenderer.class)
+public class MixinGameRenderer {
+	@Final
+	@Shadow
+	Minecraft minecraft;
+	@Final
+	@Shadow
+	private LightTexture lightTexture;
 
-		if (factor != 1.0) {
-			Vec3 result = ci.getReturnValue();
-			result = new Vec3(Math.max(MIN, result.x * factor), Math.max(MIN, result.y * factor), Math.max(MIN, result.z * factor));
+	@Inject(method = "renderLevel", at = @At(value = "HEAD"))
+	private void onRenderLevel(float tickDelta, long nanos, PoseStack matrixStack, CallbackInfo ci) {
+		final LightmapAccess lightmap = (LightmapAccess) lightTexture;
 
-			ci.setReturnValue(result);
+		if (lightmap.darkness_isDirty()) {
+			minecraft.getProfiler().push("lightTex");
+			Darkness.updateLuminance(tickDelta, minecraft, (GameRenderer) (Object) this, lightmap.darkness_prevFlicker());
+			minecraft.getProfiler().pop();
 		}
 	}
 }

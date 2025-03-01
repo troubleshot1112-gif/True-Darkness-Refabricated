@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package grondag.darkness;
+package to.lodestone;
 
 public interface LightmapAccess {
 	boolean darkness_isDirty();

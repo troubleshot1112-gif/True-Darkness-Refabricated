@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package grondag.darkness.mixin;
+package to.lodestone.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,30 +26,40 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.LightTexture;
 
-import grondag.darkness.Darkness;
-import grondag.darkness.LightmapAccess;
+import to.lodestone.Darkness;
+import to.lodestone.LightmapAccess;
 
-@Mixin(GameRenderer.class)
-public class MixinGameRenderer {
+@Mixin(LightTexture.class)
+public class MixinLightTexture implements LightmapAccess {
 	@Shadow
-	private Minecraft minecraft;
+	private NativeImage lightPixels;
 	@Shadow
-	private LightTexture lightTexture;
+	private float blockLightRedFlicker;
+	@Shadow
+	private boolean updateLightTexture;
 
-	@Inject(method = "renderLevel", at = @At(value = "HEAD"))
-	private void onRenderLevel(float tickDelta, long nanos, PoseStack matrixStack, CallbackInfo ci) {
-		final LightmapAccess lightmap = (LightmapAccess) lightTexture;
-
-		if (lightmap.darkness_isDirty()) {
-			minecraft.getProfiler().push("lightTex");
-			Darkness.updateLuminance(tickDelta, minecraft, (GameRenderer) (Object) this, lightmap.darkness_prevFlicker());
-			minecraft.getProfiler().pop();
+	@Inject(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/DynamicTexture;upload()V"))
+	private void onUpload(CallbackInfo ci) {
+		if (Darkness.enabled && lightPixels != null) {
+			for (int b = 0; b < 16; b++) {
+				for (int s = 0; s < 16; s++) {
+					final int color = Darkness.darken(lightPixels.getPixelRGBA(b, s), b, s);
+					lightPixels.setPixelRGBA(b, s, color);
+				}
+			}
 		}
+	}
+
+	@Override
+	public float darkness_prevFlicker() {
+		return blockLightRedFlicker;
+	}
+
+	@Override
+	public boolean darkness_isDirty() {
+		return updateLightTexture;
 	}
 }

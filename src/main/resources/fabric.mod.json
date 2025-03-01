@@ -1,35 +1,30 @@
 {
 	"schemaVersion": 1,
-	"id": "true-darkness-fork",
+	"id": "lodestone-true-darkness",
 	"version": "${version}",
-	"name": "True Darkness Fork",
-	"description": "Nighttime darkness affected by moon phase and cloud cover",
+	"name": "True Darkness by Lodestone",
+	"description": "Complete darkness, forked from True-Darkness-Fork. Reworked by Lodestone.",
 	"authors": [
-		"HaXr"
+		"Lodestone",
+		"Apollo30"
 	],
 	"contributors": [
-		"Grondag - Original Author"
+		"Grondag - Original Author",
+		"HaXr - Forked Fabric Author"
 	],
-	"contact": {
-		"issues": "https://github.com/HaXrBOT/True-Darkness-Fork/issues",
-		"sources": "https://github.com/HaXrBOT/True-Darkness-Fork"
-	},
 	"license": "LGPL 3.0",
-	"icon": "assets/darkness/true-darkness-fork.png",
+	"icon": "assets/darkness/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"grondag.darkness.DarknessInit"
-		],
-		"modmenu": [
-			"grondag.darkness.config.ModMenuIntegration"
+			"to.lodestone.DarknessInit"
 		]
 	},
 	"mixins": [
-		"darkness.client.json"
+		"mixin.client.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.14.22",
+		"fabricloader": ">=0.15.11",
 		"minecraft": "~1.20.1",
 		"java": ">=17",
 		"fabric-api": "*"
