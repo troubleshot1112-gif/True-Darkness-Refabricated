@@ -1,66 +1,31 @@
-plugins {
-	id 'fabric-loom' version '1.9-SNAPSHOT'
-	id 'maven-publish'
-}
+name: build
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version + "-${project.supported_versions}"
-group = project.maven_group
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
-repositories {
-	maven { url "https://maven.shedaniel.me/" }					//Cloth
-	maven { url "https://maven.terraformersmc.com/releases/" }	//Modmenu
-}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
-	// Fabric API
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
-	// Config
-	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
-		exclude(group: "net.fabricmc.fabric-api")
-	}
-	include "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
 
-	// Mod Menu
-	modCompileOnly modRuntimeOnly ("com.terraformersmc:modmenu:${project.mod_menu_version}"), {
-		exclude(group: "net.fabricmc.fabric-api")
-	}
-}
-
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
-}
-
-java {
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
-}
-
-jar {
-	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}"}
-	}
-}
-
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-		}
-	}
-}
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrueDarkness-1.21.11
+          path: build/libs/*.jar
