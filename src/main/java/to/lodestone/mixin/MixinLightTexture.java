@@ -37,8 +37,6 @@ public class MixinLightTexture implements LightmapAccess {
 	@Shadow
 	private NativeImage lightPixels;
 	@Shadow
-	private float blockLightRedFlicker;
-	@Shadow
 	private boolean updateLightTexture;
 
 	@Inject(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/DynamicTexture;upload()V"))
@@ -55,7 +53,7 @@ public class MixinLightTexture implements LightmapAccess {
 
 	@Override
 	public float darkness_prevFlicker() {
-		return blockLightRedFlicker;
+		return 0.0F;
 	}
 
 	@Override
